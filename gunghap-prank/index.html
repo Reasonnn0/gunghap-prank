@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💕 궁합 계산기 - 우리의 궁합은?</title>
+    <meta name="description" content="이름을 입력하고 궁합을 확인해보세요! 정확한 AI 분석으로 두 사람의 궁합을 알려드립니다.">
+    
+    <!-- Google AdSense -->
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ff6b9d 0%, #ff8a9b 30%, #ffb3c1 60%, #ffc2d1 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 떨어지는 하트 */
+        .hearts-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        
+        .heart {
+            position: absolute;
+            top: -50px;
+            font-size: 20px;
+            animation: fall linear infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-50px) rotate(0deg);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .heart-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        h1 {
+            color: #e91e63;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #ffc2d1;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #e91e63, #ff5722);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(233, 30, 99, 0.4);
+        }
+        
+        .result-screen {
+            display: none;
+        }
+        
+        /* 호랑이 캐릭터 */
+        .tiger-container {
+            position: relative;
+            margin: 20px auto;
+            width: 200px;
+        }
+        
+        .tiger {
+            font-size: 100px;
+            animation: bounce 0.5s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        
+        .speech-bubble {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4081;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 5px 20px rgba(255, 64, 129, 0.4);
+        }
+        
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px 15px 0;
+            border-style: solid;
+            border-color: #ff4081 transparent transparent;
+        }
+        
+        .prank-message {
+            color: #666;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+        
+        .entered-names {
+            background: #fff0f3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #e91e63;
+            border: 2px solid #ffc2d1;
+        }
+        
+        /* 링크 보낸 사람용 화면 */
+        .sender-view {
+            display: none;
+        }
+        
+        .data-received {
+            background: linear-gradient(135deg, #ff6b9d, #ff8a9b);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .data-received h3 {
+            margin-bottom: 10px;
+        }
+        
+        .share-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ffc2d1;
+        }
+        
+        .share-btn {
+            background: linear-gradient(135deg, #e91e63, #ff5722);
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .share-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.4);
+        }
+        
+        .loading {
+            display: none;
+        }
+        
+        .loading-bar {
+            height: 6px;
+            background: #ffc2d1;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #e91e63, #ff5722);
+            width: 0%;
+            animation: load 2s ease-in-out forwards;
+        }
+        
+        @keyframes load {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+        
+        .loading-text {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        /* 빨간 하트 장식 */
+        .deco-hearts {
+            position: absolute;
+            font-size: 24px;
+        }
+        
+        .deco-hearts.top-left {
+            top: 15px;
+            left: 15px;
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        .deco-hearts.top-right {
+            top: 15px;
+            right: 15px;
+            animation: float 2s ease-in-out infinite 0.5s;
+        }
+        
+        .deco-hearts.bottom-left {
+            bottom: 15px;
+            left: 15px;
+            animation: float 2s ease-in-out infinite 1s;
+        }
+        
+        .deco-hearts.bottom-right {
+            bottom: 15px;
+            right: 15px;
+            animation: float 2s ease-in-out infinite 1.5s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-5px) scale(1.1); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 떨어지는 하트 배경 -->
+    <div class="hearts-bg" id="heartsBg"></div>
+    
+    <div class="container">
+        <!-- 장식 하트 -->
+        <div class="deco-hearts top-left">❤️</div>
+        <div class="deco-hearts top-right">💕</div>
+        <div class="deco-hearts bottom-left">💗</div>
+        <div class="deco-hearts bottom-right">❤️</div>
+        
+        <!-- 입력 화면 -->
+        <div class="input-screen" id="inputScreen">
+            <div class="heart-icon">💕</div>
+            <h1>궁합 계산기</h1>
+            <p class="subtitle">AI가 분석하는 정확한 궁합 테스트!</p>
+            
+            <form id="gunghapForm">
+                <div class="input-group">
+                    <label>내 이름</label>
+                    <input type="text" id="name1" placeholder="이름을 입력하세요" required>
+                </div>
+                
+                <div class="input-group">
+                    <label>상대방 이름</label>
+                    <input type="text" id="name2" placeholder="상대방 이름을 입력하세요" required>
+                </div>
+                
+                <button type="submit" class="btn">💘 궁합 확인하기</button>
+            </form>
+        </div>
+        
+        <!-- 로딩 화면 -->
+        <div class="loading" id="loadingScreen">
+            <div class="heart-icon">💕</div>
+            <h1>분석 중...</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+            <p class="loading-text">AI가 두 사람의 궁합을 분석하고 있어요...</p>
+        </div>
+        
+        <!-- 결과 화면 (호랑이 + 말풍선) -->
+        <div class="result-screen" id="resultScreen">
+            <div class="tiger-container">
+                <div class="speech-bubble">속았네~! 😜</div>
+                <div class="tiger">🐯</div>
+            </div>
+            
+            <p class="prank-message">
+                ㅋㅋㅋ 장난이야!<br>
+                궁합은 직접 만들어가는 거야~ 💕
+            </p>
+            
+            <div class="entered-names" id="enteredNames"></div>
+            
+            <div class="share-section">
+                <p style="color:#888; margin-bottom:15px; font-size:0.9rem;">친구도 속여볼까? 😏</p>
+                <button class="share-btn" onclick="shareLink()">🔗 링크 복사</button>
+            </div>
+        </div>
+        
+        <!-- 보낸 사람 확인 화면 -->
+        <div class="sender-view" id="senderView">
+            <div class="tiger-container">
+                <div class="speech-bubble">잡았다! 🎉</div>
+                <div class="tiger">🐯</div>
+            </div>
+            <h1 style="margin-top:20px;">누군가 속았어요!</h1>
+            <div class="data-received" id="receivedData">
+                <h3>입력된 정보:</h3>
+                <p id="victimData"></p>
+            </div>
+            
+            <div class="share-section">
+                <p style="color:#888; margin-bottom:15px;">또 다른 친구 속이기</p>
+                <button class="share-btn" onclick="resetAndShare()">🔗 새 링크 만들기</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 떨어지는 하트 생성
+        function createFallingHearts() {
+            const container = document.getElementById('heartsBg');
+            const hearts = ['❤️', '💕', '💗', '💖', '💓', '💘'];
+            
+            for (let i = 0; i < 20; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.fontSize = (15 + Math.random() * 20) + 'px';
+                heart.style.animationDuration = (5 + Math.random() * 5) + 's';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(heart);
+            }
+        }
+        
+        createFallingHearts();
+        
+        // URL 파라미터 체크 (보낸 사람인지 확인)
+        const urlParams = new URLSearchParams(window.location.search);
+        const viewMode = urlParams.get('view');
+        const victimName1 = urlParams.get('n1');
+        const victimName2 = urlParams.get('n2');
+        
+        // 보낸 사람이 결과 확인하는 경우
+        if (viewMode === 'sender' && victimName1 && victimName2) {
+            document.getElementById('inputScreen').style.display = 'none';
+            document.getElementById('senderView').style.display = 'block';
+            document.getElementById('victimData').innerHTML = `
+                <strong>${decodeURIComponent(victimName1)}</strong> ❤️ <strong>${decodeURIComponent(victimName2)}</strong>
+            `;
+        }
+        
+        // 폼 제출
+        document.getElementById('gunghapForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name1 = document.getElementById('name1').value.trim();
+            const name2 = document.getElementById('name2').value.trim();
+            
+            if (!name1 || !name2) return;
+            
+            // 로딩 화면 표시
+            document.getElementById('inputScreen').style.display = 'none';
+            document.getElementById('loadingScreen').style.display = 'block';
+            
+            // 2초 후 결과 표시
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('resultScreen').style.display = 'block';
+                document.getElementById('enteredNames').innerHTML = `
+                    입력한 이름: <strong>${name1}</strong> ❤️ <strong>${name2}</strong>
+                `;
+                
+                // 보낸 사람 확인용 URL 생성
+                const senderUrl = `${window.location.origin}${window.location.pathname}?view=sender&n1=${encodeURIComponent(name1)}&n2=${encodeURIComponent(name2)}`;
+                
+                // 클립보드에 복사할 URL 저장
+                window.senderUrl = senderUrl;
+                
+            }, 2000);
+        });
+        
+        // 링크 복사
+        function shareLink() {
+            const baseUrl = window.location.origin + window.location.pathname;
+            
+            // 새 링크 (친구용)
+            navigator.clipboard.writeText(baseUrl).then(() => {
+                alert('링크가 복사되었어요! 친구에게 보내보세요 😏');
+            });
+            
+            // 보낸 사람 확인용 링크도 알려주기
+            if (window.senderUrl) {
+                setTimeout(() => {
+                    if (confirm('친구가 입력한 내용을 확인하고 싶으면 이 링크를 저장하세요!\n\n확인용 링크를 복사할까요?')) {
+                        navigator.clipboard.writeText(window.senderUrl).then(() => {
+                            alert('확인용 링크가 복사되었어요!\n친구가 입력하면 이 링크로 확인할 수 있어요.');
+                        });
+                    }
+                }, 500);
+            }
+        }
+        
+        // 새로 시작
+        function resetAndShare() {
+            window.location.href = window.location.pathname;
+        }
+    </script>
+</body>
+</html>
