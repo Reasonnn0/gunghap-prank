@@ -1,0 +1,8 @@
+flags:
+  - { id: voice_policy, group: axis, type: enum, note: 1일차 목소리. cut answer record }
+  - { id: said_own_name, group: axis, type: bool, note: 이름을 말했거나 단말에 쳤다 }
+  - { id: water_route, group: axis, type: enum, note: 슬라이스에서는 player 또는 none }
+  - { id: companion, group: axis, type: enum, note: none 또는 biri }
+  - { id: resolution, group: axis, type: enum, note: barricade면 유폐 }
+  - { id: refused_biri, group: axis, type: bool, note: 비리 동행을 거절했다 }
+  - { id: lock_open, group: color, type: bool, note: 급수탑 자물쇠가 열렸다 }

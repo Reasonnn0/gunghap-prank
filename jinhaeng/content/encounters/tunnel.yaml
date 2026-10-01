@@ -1,0 +1,27 @@
+id: tunnel
+cards:
+  - id: quiet
+    weight: 3
+    when: { noiseMax: 3, has: lamp }
+    text: 통로에는 자기 발소리만 있다.
+    effects: []
+  - id: drip
+    weight: 2
+    when: { has: lamp }
+    text: 천장에서 찬물이 목을 친다.
+    effects:
+      - { op: stat.add, stat: body, delta: -6 }
+  - id: voice
+    weight: 3
+    when: { noiseMin: 4 }
+    text: 없는 문장이 한 걸음 앞에서 걸었다.
+    effects:
+      - { op: stat.add, stat: memory, delta: -8 }
+      - { op: noise.add, delta: 1 }
+  - id: dark
+    weight: 4
+    when: { missing: lamp }
+    text: 불 없이 걷자 잔향이 귓가를 메운다.
+    effects:
+      - { op: stat.add, stat: memory, delta: -12 }
+      - { op: noise.add, delta: 1 }
