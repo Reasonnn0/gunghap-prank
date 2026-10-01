@@ -1,0 +1,23 @@
+{
+  "name": "jinhaeng",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "check": "tsx tools/check.ts",
+    "play": "tsx tools/play.ts",
+    "test": "tsx tools/check.ts && tsx tools/play.ts",
+    "clips": "node tools/gen-clips.mjs"
+  },
+  "dependencies": {
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  }
+}

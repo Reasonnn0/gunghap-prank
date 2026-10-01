@@ -1,0 +1,584 @@
+nodes:
+  - id: D01_WAKE
+    day: 1
+    site: 7번 중계소
+    shelter: true
+    presentation: { clip: speaker_loop, ambient: fog_idle }
+    text: 대기실이다. 복도 스피커가 「여기 아직 있어요」를 반복한다. 발전기 잔량은 무음창 두 번분이다. 사물함 메모는 북문 급수탑의 예비 전지를 가리킨다.
+    choices:
+      - id: record
+        label: 녹음한다
+        cost: 0
+        when:
+          - { op: stat.cmp, stat: cell, cmp: gte, value: 1 }
+        effects:
+          - { op: axis.set, key: voice_policy, value: record }
+          - { op: stat.add, stat: cell, delta: -1 }
+          - { op: item.add, id: tape }
+        goto: D01_AFTER_RECORD
+      - id: answer
+        label: 대답한다
+        cost: 0
+        effects:
+          - { op: axis.set, key: voice_policy, value: answer }
+          - { op: noise.add, delta: 2 }
+        goto: D01_NAME
+      - id: cut
+        label: 스피커를 끊는다
+        cost: 0
+        effects:
+          - { op: axis.set, key: voice_policy, value: cut }
+          - { op: fx.play, fx: glitch }
+        goto: D01_AFTER_CUT
+
+  - id: D01_NAME
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 스피커가 멈칫한다. 이름을 말하면 복도가 그것을 가져간다.
+    choices:
+      - id: say
+        label: 이름을 말한다
+        effects:
+          - { op: axis.set, key: said_own_name, value: true }
+          - { op: noise.add, delta: 1 }
+        goto: D01_HUB
+      - id: skip
+        label: 이름을 삼킨다
+        goto: D01_HUB
+
+  - id: D01_AFTER_RECORD
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 테이프가 한 바퀴 돈다. 문장은 기계 안에 있고, 복도에는 아직 남아 있다.
+    choices:
+      - { id: cont, label: 대기실로 돌아간다, goto: D01_HUB }
+
+  - id: D01_AFTER_CUT
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 스피커가 끊긴다. 같은 문장을 이을 단서는 바닥의 먼지뿐이다.
+    choices:
+      - { id: cont, label: 대기실로 돌아간다, goto: D01_HUB }
+
+  - id: D01_HUB
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text:
+      - when:
+          - { op: axis.eq, key: refused_biri, value: true }
+        body: 비리는 통로 끝에 섰다가 돌아갔다. 중계소의 불은 아직 켜져 있다. 행동점이 남아 있다.
+      - body: 중계소의 불은 켜져 있다. 무음창이 열려 있는 동안 움직일 수 있다.
+    choices:
+      - { id: gen, label: 발전기를 확인한다, cost: 1, goto: D01_GEN }
+      - { id: note, label: 메모를 다시 읽는다, cost: 1, goto: D01_NOTE }
+      - { id: locker, label: 사물함을 살핀다, cost: 1, goto: D01_LOCKER }
+      - { id: speaker, label: 스피커를 살핀다, cost: 1, goto: D01_SPEAKER }
+      - id: terminal
+        label: 단말에 이름을 남긴다
+        cost: 1
+        when:
+          - { op: axis.eq, key: said_own_name, value: false }
+        effects:
+          - { op: axis.set, key: said_own_name, value: true }
+        goto: D01_TERMINAL
+      - { id: tunnel, label: 간선 지하통로로 나간다, cost: 1, goto: D01_TUNNEL }
+      - { id: listen, label: 안개에 귀를 연다, cost: 1, goto: D01_LISTEN }
+      - id: push
+        label: 맨몸으로 발전기를 민다
+        cost: 1
+        when:
+          - { op: stat.cmp, stat: body, cmp: gte, value: 40 }
+        goto: D01_PUSH
+      - { id: rest, label: 쉰다, cost: 1, goto: D01_REST }
+      - { id: close, label: 무음창을 마친다, cost: 0, goto: D02_HUB }
+
+  - id: D01_GEN
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 연료 눈금은 무음창 두 번에서 멈추려 한다. 북문 급수탑의 예비 전지가 없으면 모레는 어둡다.
+    choices:
+      - { id: back, label: 대기실로 돌아간다, goto: D01_HUB }
+
+  - id: D01_NOTE
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 이전 근무자의 글씨다. 급수탑 자물쇠는 녹슬었고, 로프나 소음이면 떨어진다. 이름은 적혀 있지 않다.
+    choices:
+      - { id: back, label: 메모를 접는다, goto: D01_HUB }
+
+  - id: D01_LOCKER
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 사물함에는 손전등과 로프가 이미 나와 있다. 빈 칸에는 먼지 모양의 손이 남아 있다.
+    choices:
+      - { id: back, label: 사물함을 닫는다, goto: D01_HUB }
+
+  - id: D01_SPEAKER
+    site: 7번 중계소
+    shelter: true
+    presentation: { clip: speaker_loop, ambient: fog_idle }
+    text:
+      - when:
+          - { op: axis.eq, key: voice_policy, value: cut }
+        body: 선이 잘려 있다. 복도는 조용하고, 조용한 것이 더 크다.
+      - when:
+          - { op: axis.eq, key: voice_policy, value: record }
+        body: 스피커는 낮게 남았고, 테이프가 그 높이를 기억한다.
+      - body: 스피커는 아직 같은 문장을 씹고 있다.
+    choices:
+      - { id: back, label: 손을 뗀다, goto: D01_HUB }
+
+  - id: D01_TERMINAL
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 단말 칸에 이름을 쳐 넣었다. 창 제목은 그대로 「진행형 게임」이다. 스피커에는 나가지 않았다.
+    choices:
+      - { id: back, label: 단말에서 물러난다, goto: D01_HUB }
+
+  - id: D01_REST
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: 10 }
+    text: 의자에 등을 기대자 몸이 조금 돌아온다. 창은 아직 열려 있다.
+    choices:
+      - { id: back, label: 일어난다, goto: D01_HUB }
+
+  - id: D01_TUNNEL
+    site: 간선 지하통로
+    outdoor: true
+    encounter: tunnel
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    text: 통로의 바닥은 젖어 있다. 무음창 밖은 잔향이다.
+    choices:
+      - { id: deep, label: 더 깊이 살핀다, cost: 2, goto: D01_DEEP }
+      - { id: back, label: 중계소로 돌아간다, goto: D01_HUB }
+      - { id: trapped, label: 여기서 창이 닫힌다, goto: D01_EXPOSE }
+
+  - id: D01_DEEP
+    site: 간선 지하통로
+    outdoor: true
+    encounter: tunnel
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    text: 깊은 곳의 벽에는 같은 문장이 손톱으로 새겨져 있다. 가져온 것은 없다.
+    choices:
+      - { id: back, label: 통로 어귀로 돌아간다, goto: D01_TUNNEL }
+
+  - id: D01_LISTEN
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: memory, delta: -45 }
+      - { op: fx.play, fx: glitch }
+    text: 귀를 열자 다른 사람들의 마지막 문장이 들어온다. 자기 문장이 밀려난다.
+    choices:
+      - { id: again, label: 더 듣는다, cost: 1, goto: D01_LISTEN }
+      - { id: back, label: 귀를 막는다, goto: D01_HUB }
+
+  - id: D01_PUSH
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: -45 }
+      - { op: fx.play, fx: shake }
+    text: 발전기를 어깨로 밀었다. 기계는 움직이지 않고 어깨만 나간다.
+    choices:
+      - { id: again, label: 한 번 더 민다, cost: 1, goto: D01_PUSH }
+      - { id: back, label: 손을 뺀다, goto: D01_HUB }
+
+  - id: D01_EXPOSE
+    site: 간선 지하통로
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: -30 }
+      - { op: stat.add, stat: memory, delta: -20 }
+      - { op: fx.play, fx: shake }
+    text: 창이 닫히는데 쉼터가 아니다. 잔향이 하룻밤을 통째로 남긴다.
+    choices:
+      - { id: wake, label: 다음 창에 눈을 뜬다, goto: D02_HUB }
+
+  - id: D02_HUB
+    day: 2
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text:
+      - when:
+          - { op: axis.eq, key: voice_policy, value: answer }
+          - { op: axis.eq, key: said_own_name, value: true }
+          - { op: axis.eq, key: companion, value: none }
+          - { op: axis.eq, key: refused_biri, value: false }
+        body: 둘째 무음창이다. 통로 쪽에서 누군가 당신의 이름을 알고 서 있다.
+      - body: 둘째 무음창이다. 급수탑으로 가는 길이 지도에 열려 있다.
+    choices:
+      - id: biri
+        label: 통로의 문장을 따라간다
+        cost: 1
+        when:
+          - { op: axis.eq, key: voice_policy, value: answer }
+          - { op: axis.eq, key: said_own_name, value: true }
+          - { op: axis.eq, key: companion, value: none }
+          - { op: axis.eq, key: refused_biri, value: false }
+        goto: D02_BIRI
+      - { id: yard, label: 북문 급수탑으로 간다, cost: 1, goto: D02_YARD }
+      - { id: tunnel, label: 통로를 한 번 더 걷는다, cost: 1, goto: D02_TUNNEL }
+      - { id: window, label: 창밖을 본다, cost: 1, goto: D02_WINDOW }
+      - { id: memo, label: 메모를 펼친다, cost: 1, goto: D02_MEMO }
+      - { id: rest, label: 쉰다, cost: 1, goto: D02_REST }
+      - { id: listen, label: 안개에 귀를 연다, cost: 1, goto: D02_LISTEN }
+      - { id: close, label: 무음창을 마친다, cost: 0, goto: D03_HUB }
+
+  - id: D02_BIRI
+    site: 간선 지하통로
+    outdoor: true
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    text: 견습 기사 비리다. 열일곱이다. 복도에서 들은 이름으로 당신을 부른다. 같이 걷겠다고 한다.
+    choices:
+      - id: accept
+        label: 같이 걷는다
+        effects:
+          - { op: axis.set, key: companion, value: biri }
+        goto: D02_BIRI_STAY
+      - id: refuse
+        label: 혼자 가라고 한다
+        effects:
+          - { op: axis.set, key: refused_biri, value: true }
+        goto: D02_HUB
+
+  - id: D02_BIRI_STAY
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 비리가 의자 끝에 앉는다. 물은 둘의 몫이 된다. 말은 많이 하지 않는다.
+    choices:
+      - { id: back, label: 일을 계속한다, goto: D02_HUB }
+
+  - id: D02_YARD
+    site: 북문 급수탑
+    outdoor: true
+    encounter: tunnel
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 급수탑의 철문이 안개 속에 서 있다.
+    choices:
+      - id: lock
+        label: 자물쇠 앞에 선다
+        when:
+          - { op: color.eq, key: lock_open, value: false }
+        goto: D02_LOCK
+      - id: open
+        label: 열린 문을 확인한다
+        when:
+          - { op: color.eq, key: lock_open, value: true }
+        goto: D02_LOCK_DONE
+      - { id: back, label: 중계소로 돌아간다, goto: D02_HUB }
+
+  - id: D02_LOCK
+    site: 북문 급수탑
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 자물쇠는 녹슬었지만 버티고 있다. 메모의 말대로다.
+    choices:
+      - id: rope
+        label: 로프로 당긴다
+        when:
+          - { op: item.has, id: rope }
+        effects:
+          - { op: color.set, key: lock_open, value: true }
+          - { op: fx.play, fx: shake }
+        goto: D02_LOCK_DONE
+      - id: noise
+        label: 쇳소리를 낸다
+        effects:
+          - { op: color.set, key: lock_open, value: true }
+          - { op: noise.add, delta: 2 }
+          - { op: fx.play, fx: shake }
+        goto: D02_LOCK_DONE
+      - id: wait
+        label: 녹이 떨어질 때까지 기다린다
+        cost: 2
+        effects:
+          - { op: color.set, key: lock_open, value: true }
+        goto: D02_LOCK_DONE
+      - { id: back, label: 물러난다, goto: D02_YARD }
+
+  - id: D02_LOCK_DONE
+    site: 북문 급수탑
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 자물쇠가 떨어졌다. 기계실은 다음 무음창에 들어가는 편이 안전하다. 오늘은 문만 열어 둔다.
+    choices:
+      - { id: back, label: 중계소로 돌아간다, goto: D02_HUB }
+
+  - id: D02_TUNNEL
+    site: 간선 지하통로
+    outdoor: true
+    encounter: tunnel
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    text: 둘째 날의 통로는 어제와 같은 문장을 다른 높이로 되풀이한다.
+    choices:
+      - { id: back, label: 중계소로 돌아간다, goto: D02_HUB }
+      - { id: trapped, label: 여기서 창이 닫힌다, goto: D02_EXPOSE }
+
+  - id: D02_EXPOSE
+    site: 간선 지하통로
+    presentation: { clip: tunnel_walk, ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: -30 }
+      - { op: stat.add, stat: memory, delta: -20 }
+      - { op: fx.play, fx: shake }
+    text: 쉼터 밖에서 창이 닫힌다. 잔향이 하룻밤을 가져간다.
+    choices:
+      - { id: wake, label: 다음 창에 눈을 뜬다, goto: D03_HUB }
+
+  - id: D02_WINDOW
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 창밖은 분지다. 소리가 걷지 않는 거리는 없다. 급수탑만 얇게 보인다.
+    choices:
+      - { id: back, label: 창에서 돌아선다, goto: D02_HUB }
+
+  - id: D02_MEMO
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 메모의 마지막 줄은 번져 있다. 읽을 수 있는 것은 탑과 전지뿐이다.
+    choices:
+      - { id: back, label: 메모를 접는다, goto: D02_HUB }
+
+  - id: D02_REST
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: 10 }
+    text: 잠시 눈을 붙였다. 비리가 있다면 그 시간도 물을 나눈다.
+    choices:
+      - { id: back, label: 일어난다, goto: D02_HUB }
+
+  - id: D02_LISTEN
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: memory, delta: -45 }
+      - { op: fx.play, fx: glitch }
+    text: 둘째 창의 안개가 더 가깝다. 귀를 열면 남의 문장이 먼저 들어온다.
+    choices:
+      - { id: again, label: 더 듣는다, cost: 1, goto: D02_LISTEN }
+      - { id: back, label: 귀를 막는다, goto: D02_HUB }
+
+  - id: D03_HUB
+    day: 3
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 셋째 무음창이다. 발전기 눈금이 바닥을 본다. 오늘은 급수탑 안에서 끝내야 한다.
+    choices:
+      - id: enter
+        label: 급수탑 기계실로 간다
+        cost: 1
+        when:
+          - { op: color.eq, key: lock_open, value: true }
+        goto: D03_YARD
+      - id: lock
+        label: 아직 닫힌 자물쇠로 간다
+        cost: 1
+        when:
+          - { op: color.eq, key: lock_open, value: false }
+        goto: D03_LOCK
+      - { id: rest, label: 쉰다, cost: 1, goto: D03_REST }
+      - { id: listen, label: 안개에 귀를 연다, cost: 1, goto: D03_LISTEN }
+      - id: push
+        label: 맨몸으로 발전기를 민다
+        cost: 1
+        when:
+          - { op: stat.cmp, stat: body, cmp: gte, value: 40 }
+        goto: D03_PUSH
+
+  - id: D03_LOCK
+    site: 북문 급수탑
+    outdoor: true
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 셋째 날에도 자물쇠는 남아 있다.
+    choices:
+      - id: rope
+        label: 로프로 당긴다
+        when:
+          - { op: item.has, id: rope }
+        effects:
+          - { op: color.set, key: lock_open, value: true }
+          - { op: fx.play, fx: shake }
+        goto: D03_LOCK_DONE
+      - id: noise
+        label: 쇳소리를 낸다
+        effects:
+          - { op: color.set, key: lock_open, value: true }
+          - { op: noise.add, delta: 2 }
+          - { op: fx.play, fx: shake }
+        goto: D03_LOCK_DONE
+      - { id: back, label: 중계소로 돌아간다, goto: D03_HUB }
+
+  - id: D03_LOCK_DONE
+    site: 북문 급수탑
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 문이 열렸다. 기계실의 공기는 차다.
+    choices:
+      - { id: in, label: 기계실로 들어간다, goto: D03_ROOM }
+
+  - id: D03_YARD
+    site: 북문 급수탑
+    outdoor: true
+    encounter: tunnel
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 열어 둔 철문이 바람 없이 흔들린다.
+    choices:
+      - { id: in, label: 기계실로 들어간다, goto: D03_ROOM }
+      - { id: trapped, label: 문 밖에서 창이 닫힌다, goto: D03_EXPOSE }
+
+  - id: D03_ROOM
+    site: 북문 급수탑
+    shelter: true
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text: 예비 전지와 식수 통이 기계실 바닥에 있다. 문을 잠그면 도시는 밖에 남는다.
+    choices:
+      - id: meter
+        label: 계기판을 본다
+        cost: 1
+        goto: D03_METER
+      - id: supply
+        label: 통을 열어 본다
+        cost: 1
+        goto: D03_SUPPLY
+      - id: take
+        label: 물과 전지를 중계소로 가져간다
+        cost: 1
+        effects:
+          - { op: stat.add, stat: water, delta: 3 }
+          - { op: stat.add, stat: cell, delta: 2 }
+          - { op: stat.add, stat: food, delta: 1 }
+        goto: D03_CHECKPOINT
+      - id: barricade
+        label: 문을 잠그고 남는다
+        cost: 1
+        effects:
+          - { op: axis.set, key: resolution, value: barricade }
+          - { op: axis.set, key: water_route, value: player }
+          - { op: stat.add, stat: water, delta: 3 }
+          - { op: stat.add, stat: cell, delta: 2 }
+          - { op: fx.play, fx: shake }
+        goto: END_LOCKED
+      - { id: out, label: 문 밖에 남는다, goto: D03_EXPOSE }
+
+  - id: D03_METER
+    site: 북문 급수탑
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 계기판은 중계소와 같은 눈금이다. 오늘은 버티고, 내일은 적혀 있지 않다.
+    choices:
+      - { id: back, label: 기계실로 돌아간다, goto: D03_ROOM }
+
+  - id: D03_SUPPLY
+    site: 북문 급수탑
+    shelter: true
+    presentation: { ambient: fog_idle }
+    text: 통의 물은 맑다. 전지 묶음은 무겁지 않다. 가져가거나, 이 문을 잠글 수 있다.
+    choices:
+      - { id: back, label: 통을 내려놓는다, goto: D03_ROOM }
+
+  - id: D03_REST
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: 10 }
+    text: 마지막 창에서 눈을 붙이는 것은 짧다.
+    choices:
+      - { id: back, label: 일어난다, goto: D03_HUB }
+
+  - id: D03_LISTEN
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: memory, delta: -45 }
+      - { op: fx.play, fx: glitch }
+    text: 마지막 창에서 귀를 열면 자기 번호가 밀린다.
+    choices:
+      - { id: again, label: 더 듣는다, cost: 1, goto: D03_LISTEN }
+      - { id: back, label: 귀를 막는다, goto: D03_HUB }
+
+  - id: D03_PUSH
+    site: 7번 중계소
+    shelter: true
+    presentation: { ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: -45 }
+      - { op: fx.play, fx: shake }
+    text: 발전기는 여전히 무겁다. 어깨가 먼저 나간다.
+    choices:
+      - { id: again, label: 한 번 더 민다, cost: 1, goto: D03_PUSH }
+      - { id: back, label: 손을 뺀다, goto: D03_HUB }
+
+  - id: D03_EXPOSE
+    site: 북문 급수탑
+    presentation: { clip: tower_door, ambient: fog_idle }
+    onEnter:
+      - { op: stat.add, stat: body, delta: -30 }
+      - { op: stat.add, stat: memory, delta: -20 }
+      - { op: fx.play, fx: shake }
+    text: 기계실 밖에서 밤이 된다. 문은 열려 있으나 당신은 안에 있지 않다.
+    choices:
+      - { id: crawl, label: 기계실로 기어간다, goto: D03_ROOM }
+
+  - id: D03_CHECKPOINT
+    site: 7번 중계소
+    shelter: true
+    kind: checkpoint
+    presentation: { ambient: fog_idle }
+    text:
+      - when:
+          - { op: axis.eq, key: voice_policy, value: record }
+        body: 테이프에는 그 문장이 들어 있다. 녹음은 남았다. 무음창 4는 아직 열리지 않았다.
+      - when:
+          - { op: axis.eq, key: voice_policy, value: answer }
+        body: 복도는 대답을 아직 삼키지 않았다. 무음창 4는 아직 열리지 않았다.
+      - when:
+          - { op: axis.eq, key: voice_policy, value: cut }
+        body: 스피커는 꺼져 있다. 복도에 문장이 없다. 무음창 4는 아직 열리지 않았다.
+      - body: 무음창 4는 아직 열리지 않았다.
+
+  - id: END_LOCKED
+    site: 북문 급수탑
+    shelter: true
+    kind: ending
+    presentation: { clip: tower_door, ambient: fog_idle }
+    text:
+      - when:
+          - { op: axis.eq, key: voice_policy, value: cut }
+        body: 급수탑의 문. 스피커를 끊은 손으로 빗장을 걸었다. 도시는 밖에 그대로다.
+      - when:
+          - { op: axis.eq, key: voice_policy, value: record }
+        body: 급수탑의 문. 테이프는 품 안에 있고 문은 잠겼다. 도시는 밖에 그대로다.
+      - body: 급수탑의 문. 대답을 품은 채로 빗장을 걸었다. 도시는 밖에 그대로다.
+
+  - id: END_BODY
+    site: 여기
+    kind: vital
+    presentation: { ambient: fog_idle }
+    text: 불 꺼진 중계소. 녹음기가 숨 한 번을 재생하고 멈춘다.
+
+  - id: END_MEMORY
+    site: 여기
+    kind: vital
+    presentation: { ambient: fog_idle }
+    text: 이름 없는 무음. 단말은 이전 근무자의 번호로 당신을 부른다.
